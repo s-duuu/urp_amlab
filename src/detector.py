@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative path
 
-sys.path.append('/home/heven/catkin_ws/src/cm_Camera_LiDAR_Fusion/src/')
+sys.path.append('/home/heven/catkin_ws/src/urp_amlab/src')
 
 # import from yolov5 submodules
 from yolov5.models.common import DetectMultiBackend
@@ -158,7 +158,6 @@ class Yolov5Detector:
                 # Annotate the image
                 if self.publish_image or self.view_image:  # Add bbox to image
                       # integer class
-                    conf += 0.7
                     label = f"{self.names[c]} {conf:.2f}"
                     annotator.box_label(xyxy, label, color=colors(c, True))       
 

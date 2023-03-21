@@ -1,8 +1,8 @@
 <launch>
     <!-- Detection configuration -->
-    <arg name="weights"               default="/home/heven/catkin_ws/src/face.pt"/>
-    <arg name="data"                  default="/home/heven/catkin_ws/src/dataset/data.yaml"/>
-    <arg name="confidence_threshold"  default="0.10"/>
+    <arg name="weights"               default="/home/heven/catkin_ws/src/urp_amlab/best.pt"/>
+    <arg name="data"                  default="/home/heven/catkin_ws/src/urp_amlab/src/yolov5/data/coco128.yaml"/>
+    <arg name="confidence_threshold"  default="0.75"/>
     <arg name="iou_threshold"         default="0.45"/>
     <arg name="maximum_detections"    default="1000"/>
     <arg name="device"                default="0"/>
@@ -19,7 +19,7 @@
     <arg name="view_image"            default="true"/>
 
     <!-- ROS topics -->
-    <arg name="input_image_topic"       default="/usb_cam/image_raw/compressed"/>
+    <arg name="input_image_topic"       default="/carmaker_vds_client_node/image_raw/compressed"/>
     <arg name="output_topic"            default="/yolov5/detections"/>
 
     <!-- Optional topic (publishing annotated image) -->
@@ -27,7 +27,7 @@
     <arg name="output_image_topic"      default="/yolov5/image_out"/>
 
 
-    <node pkg="camera_lidar_fusion" name="detector" type="detector.py" output="screen">
+    <node pkg="trajectory_prediction" name="detector" type="detector.py" output="screen">
         <param name="weights"               value="$(arg weights)"/>
         <param name="data"                  value="$(arg data)"/>
         <param name="confidence_threshold"  value="$(arg confidence_threshold)"/>
@@ -51,8 +51,8 @@
         <param name="output_image_topic"    value="$(arg output_image_topic)"/>
     </node>
 
-    <!-- <node pkg="camera_lidar_fusion" name="fusion_node" type="matrix_fusion.py" output="screen"/>
-    <node pkg="camera_lidar_fusion" name="sort" type="tracker.py" output="screen"/> -->
+    <node pkg="trajectory_prediction" name="fusion_node" type="matrix_fusion.py" output="screen"/>
+    <!-- <node pkg="camera_lidar_fusion" name="sort" type="tracker.py" output="screen"/> -->
 
 
 </launch>

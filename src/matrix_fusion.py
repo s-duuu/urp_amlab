@@ -4,7 +4,7 @@ import rospy
 import os
 import numpy as np
 import numpy.linalg as lin
-import kalman_filter
+# import kalman_filter
 import math
 import cv2
 import pandas as pd
@@ -19,7 +19,7 @@ from camera_lidar_fusion.msg import BoundingBox
 from camera_lidar_fusion.msg import LidarObject
 from camera_lidar_fusion.msg import LidarObjectList
 from filterpy.kalman import KalmanFilter
-from kalman_filter import call_2dkalman
+# from kalman_filter import call_2dkalman
 import time
 
 VELOCITY_MAX_CNT = 10
@@ -64,9 +64,9 @@ class fusion():
             self.min_lidar_x[i] = (math.inf)
 
         rospy.init_node('fusion_node', anonymous=False)
-        rospy.Subscriber('tracked_boxes', BoundingBoxes, self.camera_object_callback)
+        rospy.Subscriber('yolov5/detections', BoundingBoxes, self.camera_object_callback)
         rospy.Subscriber('lidar_objects', LidarObjectList, self.lidar_object_callback)
-        rospy.Subscriber('tracked_image', Image, self.visualize)
+        rospy.Subscriber('yolov5/image_out', Image, self.visualize)
 
     # 카메라 Bounding Box Callback 함수
     def camera_object_callback(self, data):
@@ -110,7 +110,7 @@ class fusion():
         x = round(transformed_matrix[0][0])
         y = round(transformed_matrix[1][0])
 
-        # cv2.line(self.image, (x,y), (x,y), (0, 255, 0), 3)
+        cv2.line(self.image, (x,y), (x,y), (0, 255, 0), 3)
 
         return (x,y)
             
@@ -174,150 +174,140 @@ class fusion():
 
                 # min_lidar_x 걸러내는 코드
                 if self.is_in_bbox(bbox, self.transform(lidar_point)) == True:
-                    x_sum[bbox.id] += lidar_point.x
-                    y_sum[bbox.id] += lidar_point.y
-                    num[bbox.id] += 1
-                    if lidar_point.x < self.min_lidar_x[bbox.id]:
-                        self.min_lidar_x[bbox.id] = lidar_point.x
+                    print("good")
+                    # x_sum[bbox.id] += lidar_point.x
+                    # y_sum[bbox.id] += lidar_point.y
+                    # num[bbox.id] += 1
+                    # if lidar_point.x < self.min_lidar_x[bbox.id]:
+                    #     self.min_lidar_x[bbox.id] = lidar_point.x
 
         # average_x = x_sum[1] / num[1]
         # average_y = y_sum[1] / num[1]
 
         # velocity 계산 + risk_calculate 호출
-        for bbox in self.bounding_box_list:
+        # for bbox in self.bounding_box_list:
 
             
-            # fusion_distance_list에 min_lidar_x 추가
-            # self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
+        #     # fusion_distance_list에 min_lidar_x 추가
+        #     # self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
             
-            # heading 계산
-            if self.heading_cnt == HEADING_MAX_CNT:
-                average_x = x_sum[bbox.id] / num[bbox.id]
-                average_y = y_sum[bbox.id] / num[bbox.id]
-                self.average_value[bbox.id].append([average_x, average_y])
+        #     # heading 계산
+        #     if self.heading_cnt == HEADING_MAX_CNT:
+        #         average_x = x_sum[bbox.id] / num[bbox.id]
+        #         average_y = y_sum[bbox.id] / num[bbox.id]
+        #         self.average_value[bbox.id].append([average_x, average_y])
 
-                if len(self.average_value[bbox.id]) == 0 or len(self.average_value[bbox.id]) == 1:
-                    pass
+        #         if len(self.average_value[bbox.id]) == 0 or len(self.average_value[bbox.id]) == 1:
+        #             pass
 
-                else:
-                    vector = np.array([average_x - self.average_value[bbox.id][-2][0], average_y - self.average_value[bbox.id][-2][1]])
-                    print("Vector : ", vector)
-                    print("Theta : ", self.heading_calc(vector))
-                    self.fusion_heading_list[bbox.id].append([self.cur_time - self.init_time, self.heading_calc(vector), self.average_value[bbox.id][-2][0], self.average_value[bbox.id][-2][1]])
+        #         else:
+        #             vector = np.array([average_x - self.average_value[bbox.id][-2][0], average_y - self.average_value[bbox.id][-2][1]])
+        #             print("Vector : ", vector)
+        #             print("Theta : ", self.heading_calc(vector))
+        #             self.fusion_heading_list[bbox.id].append([self.cur_time - self.init_time, self.heading_calc(vector), self.average_value[bbox.id][-2][0], self.average_value[bbox.id][-2][1]])
 
-                # self.world_point[bbox.id].append([self.cur_time - self.init_time, cur_point])
-                # # print("world_point : ", self.world_point[bbox.id] )
-                # if len(self.world_point[bbox.id]) == 1:
-                #     pass
+        #         # self.world_point[bbox.id].append([self.cur_time - self.init_time, cur_point])
+        #         # # print("world_point : ", self.world_point[bbox.id] )
+        #         # if len(self.world_point[bbox.id]) == 1:
+        #         #     pass
                 
-                # else:
-                #     vector = np.array([cur_point[0] - self.world_point[bbox.id][-2][1][0], cur_point[1] - self.world_point[bbox.id][-2][1][1]])
+        #         # else:
+        #         #     vector = np.array([cur_point[0] - self.world_point[bbox.id][-2][1][0], cur_point[1] - self.world_point[bbox.id][-2][1][1]])
                     
-                #     print("!!!!Vector!!!! : ", vector)
+        #         #     print("!!!!Vector!!!! : ", vector)
 
-                #     self.fusion_heading_list[bbox.id].append([self.cur_time - self.init_time, self.heading_calc(vector)])
+        #         #     self.fusion_heading_list[bbox.id].append([self.cur_time - self.init_time, self.heading_calc(vector)])
 
-            if (len(self.fusion_distance_list[bbox.id]) == 0 or len(self.fusion_distance_list[bbox.id]) == 1):
-                # self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
-                self.dist_risk_calculate(bbox, self.min_lidar_x[bbox.id])
-                self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
-                self.fusion_velocity_list[bbox.id].append([self.cur_time - self.init_time, -2.5, -2.5])
+        #     if (len(self.fusion_distance_list[bbox.id]) == 0 or len(self.fusion_distance_list[bbox.id]) == 1):
+        #         # self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
+        #         self.dist_risk_calculate(bbox, self.min_lidar_x[bbox.id])
+        #         self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
+        #         self.fusion_velocity_list[bbox.id].append([self.cur_time - self.init_time, -2.5, -2.5])
                 
 
-            else:
-                velocity = (self.min_lidar_x[bbox.id] - self.fusion_distance_list[bbox.id][-1][1]) / (self.time_diff)
-                """
+        #     else:
+        #         velocity = (self.min_lidar_x[bbox.id] - self.fusion_distance_list[bbox.id][-1][1]) / (self.time_diff)
+        #         """
 
-                !!!!!!!!!!!!!!!!!칼만필터 구현!!!!!!!!!!!!!!!!!
+        #         !!!!!!!!!!!!!!!!!칼만필터 구현!!!!!!!!!!!!!!!!!
 
-                """
+        #         """
                 
-                filtered_velocity = call_2dkalman(kf=kf, dt=0.3, distance=self.min_lidar_x[bbox.id], x_i=self.fusion_distance_list[bbox.id][-1][1], v_i=self.fusion_velocity_list[bbox.id][-1][2])
-                self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
-                self.fusion_velocity_list[bbox.id].append([self.cur_time - self.init_time, velocity, filtered_velocity])
+        #         filtered_velocity = call_2dkalman(kf=kf, dt=0.3, distance=self.min_lidar_x[bbox.id], x_i=self.fusion_distance_list[bbox.id][-1][1], v_i=self.fusion_velocity_list[bbox.id][-1][2])
+        #         self.fusion_distance_list[bbox.id].append([self.cur_time - self.init_time, self.min_lidar_x[bbox.id]])
+        #         self.fusion_velocity_list[bbox.id].append([self.cur_time - self.init_time, velocity, filtered_velocity])
                 
                 # print("Velocity : ", velocity)
                 
             
-            print("-------------------------")
+        #     print("-------------------------")
         
-        print("==============================")
+        # print("==============================")
 
-    def risk_calculate(self, bbox, distance, velocity):
+    # def risk_calculate(self, bbox, distance, velocity):
         
-        if distance < 6:
-            cv2.rectangle(self.image, (0, 0), (1280, 960), (0,0,255), 50, 1)
-            cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 0, 255), 5, 1)
-            cv2.line(self.image, (850, 800), (1150, 800), (0, 0, 255), 5, 1)
-            cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 0, 255), 5, 1)
-        else:
-            car_velocity = self.my_speed - velocity
+    #     if distance < 6:
+    #         cv2.rectangle(self.image, (0, 0), (1280, 960), (0,0,255), 50, 1)
+    #         cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 0, 255), 5, 1)
+    #         cv2.line(self.image, (850, 800), (1150, 800), (0, 0, 255), 5, 1)
+    #         cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 0, 255), 5, 1)
+    #     else:
+    #         car_velocity = self.my_speed - velocity
 
-            crash_time = distance / (car_velocity - math.sin(math.radians(85))*self.my_speed)
+    #         crash_time = distance / (car_velocity - math.sin(math.radians(85))*self.my_speed)
 
-            self.fusion_crash_list[bbox.id].append([time.time() - self.init_time, crash_time])
+    #         self.fusion_crash_list[bbox.id].append([time.time() - self.init_time, crash_time])
             
-            lane_change_time = 3.5 / (self.my_speed * math.cos(math.radians(85)))
+    #         lane_change_time = 3.5 / (self.my_speed * math.cos(math.radians(85)))
             
-            # Ok to change lane
-            if crash_time - lane_change_time >= 3.5 or self.my_speed > car_velocity:
-                pass
+    #         # Ok to change lane
+    #         if crash_time - lane_change_time >= 3.5 or self.my_speed > car_velocity:
+    #             pass
             
-            # Warning
-            elif crash_time - lane_change_time < 3.5 and crash_time - lane_change_time >= 2.5:
-                cv2.rectangle(self.image, (0, 0), (1280, 960), (0,130,255), 50, 1)
-                cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 130, 255), 5, 1)
-                cv2.line(self.image, (850, 800), (1150, 800), (0, 130, 255), 5, 1)
-                cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 130, 255), 5, 1)
+    #         # Warning
+    #         elif crash_time - lane_change_time < 3.5 and crash_time - lane_change_time >= 2.5:
+    #             cv2.rectangle(self.image, (0, 0), (1280, 960), (0,130,255), 50, 1)
+    #             cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 130, 255), 5, 1)
+    #             cv2.line(self.image, (850, 800), (1150, 800), (0, 130, 255), 5, 1)
+    #             cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 130, 255), 5, 1)
 
-            # Dangerous
-            else:
-                cv2.rectangle(self.image, (0, 0), (1280, 960), (0,0,255), 50, 1)
-                cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 0, 255), 5, 1)
-                cv2.line(self.image, (850, 800), (1150, 800), (0, 0, 255), 5, 1)
-                cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 0, 255), 5, 1)
+    #         # Dangerous
+    #         else:
+    #             cv2.rectangle(self.image, (0, 0), (1280, 960), (0,0,255), 50, 1)
+    #             cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 0, 255), 5, 1)
+    #             cv2.line(self.image, (850, 800), (1150, 800), (0, 0, 255), 5, 1)
+    #             cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 0, 255), 5, 1)
     
-    def dist_risk_calculate(self, bbox, distance):
+    # def dist_risk_calculate(self, bbox, distance):
         
-        # Ok to change lane
-        if distance > 20:
-            pass
+    #     # Ok to change lane
+    #     if distance > 20:
+    #         pass
         
-        # Warning
-        elif 10 < distance <= 20:
-            cv2.rectangle(self.image, (0, 0), (1280, 960), (0,130,255), 50, 1)
-            cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 130, 255), 5, 1)
-            cv2.line(self.image, (850, 800), (1150, 800), (0, 130, 255), 5, 1)
-            cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 130, 255), 5, 1)
+    #     # Warning
+    #     elif 10 < distance <= 20:
+    #         cv2.rectangle(self.image, (0, 0), (1280, 960), (0,130,255), 50, 1)
+    #         cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 130, 255), 5, 1)
+    #         cv2.line(self.image, (850, 800), (1150, 800), (0, 130, 255), 5, 1)
+    #         cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 130, 255), 5, 1)
 
-        # Dangerous
-        else:
-            cv2.rectangle(self.image, (0, 0), (1280, 960), (0,0,255), 50, 1)
-            cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 0, 255), 5, 1)
-            cv2.line(self.image, (850, 800), (1150, 800), (0, 0, 255), 5, 1)
-            cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 0, 255), 5, 1)
+    #     # Dangerous
+    #     else:
+    #         cv2.rectangle(self.image, (0, 0), (1280, 960), (0,0,255), 50, 1)
+    #         cv2.line(self.image, (1000, 800), (int((bbox.xmin + bbox.xmax)/2), bbox.ymax), (0, 0, 255), 5, 1)
+    #         cv2.line(self.image, (850, 800), (1150, 800), (0, 0, 255), 5, 1)
+    #         cv2.line(self.image, (bbox.xmin, bbox.ymax), (bbox.xmax, bbox.ymax), (0, 0, 255), 5, 1)
 
     
     # Image 송출 함수
     def visualize(self, data):
         self.image = self.bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
         # self.start_time = time.time()
-        if self.velocity_cnt == VELOCITY_MAX_CNT:
-            cur_time = time.time()
-            self.time_diff = cur_time - self.cur_time
-            self.cur_time = cur_time
-            self.matching()
-            self.velocity_cnt = 1
-            if self.heading_cnt == HEADING_MAX_CNT:
-                self.heading_cnt = 1
-            else:
-                self.heading_cnt += 1
-        else:
-            self.velocity_cnt += 1
+        self.matching()
     
-        for bbox in self.bounding_box_list:
-            if bbox.id == 1:
-                self.risk_calculate(bbox, self.fusion_distance_list[bbox.id][-1][1], self.fusion_velocity_list[bbox.id][-1][2])
+        # for bbox in self.bounding_box_list:
+        #     if bbox.id == 1:
+        #         self.risk_calculate(bbox, self.fusion_distance_list[bbox.id][-1][1], self.fusion_velocity_list[bbox.id][-1][2])
         
         cv2.imshow("Display", self.image)
         cv2.waitKey(1)
@@ -333,28 +323,28 @@ if __name__ == '__main__':
         fusion_class = fusion()
         rospy.spin()
     
-    # # 결과 CSV 파일로 저장
-    os.chdir('/home/heven/CoDeep_ws/src/cm_Camera_LiDAR_Fusion/src/csv/test')
+    # # # 결과 CSV 파일로 저장
+    # os.chdir('/home/heven/CoDeep_ws/src/cm_Camera_LiDAR_Fusion/src/csv/test')
 
-    f1 = open('distance_fusion_test.csv', 'w')
-    f2 = open('velocity_fusion_test.csv', 'w')
-    f3 = open('crash_fusion_result.csv', 'w')
-    f4 = open('heading_fusion_result.csv', 'w')
+    # f1 = open('distance_fusion_test.csv', 'w')
+    # f2 = open('velocity_fusion_test.csv', 'w')
+    # f3 = open('crash_fusion_result.csv', 'w')
+    # f4 = open('heading_fusion_result.csv', 'w')
 
-    writer1 = csv.writer(f1)
-    writer2 = csv.writer(f2)
-    writer3 = csv.writer(f3)
-    writer4 = csv.writer(f4)
+    # writer1 = csv.writer(f1)
+    # writer2 = csv.writer(f2)
+    # writer3 = csv.writer(f3)
+    # writer4 = csv.writer(f4)
 
-    writer1.writerows(fusion_class.fusion_distance_list[1])
-    writer2.writerows(fusion_class.fusion_velocity_list[1])
-    writer3.writerows(fusion_class.fusion_crash_list[1])
-    writer4.writerows(fusion_class.fusion_heading_list[1])
+    # writer1.writerows(fusion_class.fusion_distance_list[1])
+    # writer2.writerows(fusion_class.fusion_velocity_list[1])
+    # writer3.writerows(fusion_class.fusion_crash_list[1])
+    # writer4.writerows(fusion_class.fusion_heading_list[1])
 
-    f1.close()
-    f2.close()
-    f3.close()
-    f4.close()
+    # f1.close()
+    # f2.close()
+    # f3.close()
+    # f4.close()
     
     # df = pd.DataFrame({'Distance': fusion_class.fusion_distance_list[1]})
     # df.to_csv("distance_fusion_test.csv", index=False)
