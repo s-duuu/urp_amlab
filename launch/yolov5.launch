@@ -51,8 +51,8 @@
         <param name="output_image_topic"    value="$(arg output_image_topic)"/>
     </node>
 
-    <node pkg="trajectory_prediction" name="fusion_node" type="matrix_fusion.py" output="screen"/>
-    <!-- <node pkg="camera_lidar_fusion" name="sort" type="tracker.py" output="screen"/> -->
-
+    <node pkg="trajectory_prediction" name="fusion_node" type="fusion.py" output="screen"/>
+    <node pkg="trajectory_prediction" name="pillar_node" type="pillar_detect.py" output="screen" />
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find trajectory_prediction)/launch/fusion_display.rviz" />
 
 </launch>
